@@ -163,16 +163,4 @@ public class Graph {
             addEdge(v2, v1);
         }
     }
-
-    public static void main(String[] args) {
-        int size = 10000;
-        Graph graph = new Graph(size);
-        // graph.createCompleteGraph();
-        // graph.createCycleGraph();
-        int E = 200;
-        // graph.createUniformDistGraph(E);
-        graph.createSkewedDistGraph(E);
-        // graph.createMyDistGraph(E);
-        graph.printGraph();
-    }
 }
