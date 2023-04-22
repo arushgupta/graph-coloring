@@ -8,6 +8,7 @@ public class Utility {
         return randomizer;
     }
 
+    // https://gamedev.stackexchange.com/questions/116832/random-number-in-a-range-biased-toward-the-low-end-of-the-range
     public static int getSkewedNumber(int min, int max) {
         double x = Math.pow(Math.random(), 2);
         int num = (int)(min + x * (max - min + 1));

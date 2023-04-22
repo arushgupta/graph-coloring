@@ -27,6 +27,7 @@ public class Graph {
     }
     
     List<Vertex> vertices;
+    List<Vertex> ordering;
     int size = 0;
     int maxColor = 0;
 
@@ -163,4 +164,15 @@ public class Graph {
             addEdge(v2, v1);
         }
     }
+
+    public void performSLVO() {
+        List<Vertex> degrees = new ArrayList<Vertex>(size);
+        int[] newDegrees = new int[size];
+        int[] deleted = new int[size];
+
+        
+
+    }
+
+
 }
