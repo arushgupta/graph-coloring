@@ -1,98 +1,87 @@
 import java.util.ArrayList;
-import java.lang.Math;
+import java.util.List;
 
 public class Graph {
-    private Edge[] edges = null;
-    private Vertex[] vertices = null;
-    private Vertex[] ordering = null;
-
-    public int size = 0;
-    public int maxColor = 0;
     
-    private class Edge {
-        int dest = -1;
-        Edge next = null;
-        
-        public Edge(int d, Edge n) {
-            dest = d;
-            next = n;
+    class Vertex {
+        int id;
+        int degree;
+        int color;
+        List<Integer> neighbors;
+
+        public Vertex(int id, int size) {
+            this.id = id;
+            this.degree = 0;
+            this.color = -1;
+            this.neighbors = new ArrayList<Integer>(size);
+        }
+
+        public void addNeighbor(int neighborId) {
+            neighbors.add(neighborId);
+            degree++;
+        }
+
+        public List<Integer> getNeighbors() {
+            return neighbors;
         }
     }
-    private class Vertex {
-        int id = 0;
-        int degree = 0;
-        int color = 0;
-    }
-
-
     
+    List<Vertex> vertices;
+    int size = 0;
+    int maxColor = 0;
 
-    // Instantiate an emptyGraph graph
-    public Graph() { emptyGraph(); }
-
-    // Build a graph based on vertices
-    public void buildGraph(final int V) {
-        edges = new Edge[V];
-        vertices = new Vertex[V];
-        for (int i = 0; i < V; i++) {
-            vertices[i].id = i;
-            edges[i] = null;
+    public Graph(int size) {
+        this.size = size;
+        vertices = new ArrayList<Vertex>(size);
+        for (int i = 0; i < size; i++) {
+            vertices.add(i, new Vertex(i, size));
         }
-        size = V;
     }
 
-    // Clear the graph
-    public void emptyGraph() {
-        size = 0;
-        maxColor = 0; 
-        vertices = null;
-        ordering = null;
-        edges = null;
+    public void addEdge(int src, int dest) {
+        Vertex srcVertex = vertices.get(src);
+        Vertex destVertex = vertices.get(dest);
+
+        srcVertex.addNeighbor(dest);
+        destVertex.addNeighbor(src);
     }
 
-    // Add an edge between two vertices
-    public void addEdge(final int vertex1, final int vertex2) {
-        Edge e = new Edge(vertex2, edges[vertex1]);
-        edges[vertex1] = e;
-        vertices[vertex1].degree++;
-    }
-
-    // Get an edge between two vertices
-    public Edge getEdge(final int vertex1, final int vertex2) {
-        Edge currEdge = edges[vertex1];
-        while (currEdge != null) {
-            if (currEdge.dest == vertex2) {
-                return currEdge;
-            }
-            currEdge = currEdge.next;
-        }
-        return null;
+    // Checks whether two vertices share an edge
+    // Runs in O(1) - Constant
+    // https://www.baeldung.com/java-collections-complexity
+    public boolean hasEdge(int src, int dest) {
+        return vertices.get(src).neighbors.contains(dest) && vertices.get(dest).neighbors.contains(src);
     }
 
     // Create a complete graph
     public void createCompleteGraph() {
-        for(int i = 0; i < size; i++) {
-            for(int j = 0; j < size; j++) {
-                if (i == j) {
-                    continue;
-                }
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
                 addEdge(i, j);
             }
         }
     }
-
+    
     // Create a cycle graph
     public void createCycleGraph() {
-        for (int i = 0; i < size - 1; i++) {
-            addEdge(i, i + 1);
-            addEdge(i + 1, i);
+        for (int i = 0; i < size; i++) {
+            addEdge(i, (i+1) % size);
         }
-        addEdge(size - 1, 0);
-        addEdge(0, size - 1);
     }
 
+    // Print graph
+    public void printGraph() {
+        for (Vertex vertex : vertices) {
+            System.out.print("Vertex " + vertex.id + ": ");
+            for (int neighborId : vertex.getNeighbors()) {
+                System.out.print(neighborId + " ");
+            }
+            System.out.println("Degree: " + vertex.degree + ", Color: " + vertex.color);
+        }
+    }
+    
     // Create an Evenly Distributed Graph
-    public void createEvenDistGraph(int E) {
+    public void createUniformDistGraph(int E) {
         int maxEdges = size * (size - 1) / 2;
 
         if (E > maxEdges) {
@@ -101,38 +90,89 @@ public class Graph {
         }
 
         for (int i = 0; i < E; i++) {
-            int v1 = Utility.get_random_number(0, size);
-            int v2 = Utility.get_random_number(0, size);
+            int v1 = Utility.getRandomNumber(0, size - 1);
+            int v2 = Utility.getRandomNumber(0, size - 1);
 
-            if (v1 == v2 || v1 == size || v2 == size) {
+            if (v1 == v2 || v1 == size || v2 == size || hasEdge(v1, v2)) {
                 i--;
                 continue;
             }
             addEdge(v1, v2);
             addEdge(v2, v1);
         }
-
     }
-
-    public void createSkewedGraph(int E) {
+    
+    // Create a skewed graph
+    public void createSkewedDistGraph(int E) {
         int maxEdges = size * (size - 1) / 2;
 
         if (E > maxEdges) {
-            System.out.println("Skewed Graph cannot have this many edges.");
+            System.out.println("Too many edges");
+            return;
+        }
+        // 
+        for (int i = 0; i < E; i++) {
+            int v1 = Utility.getSkewedNumber(0, size - 1);
+            int v2 = Utility.getSkewedNumber(0, size - 1);
+
+            if (v1 == v2 || hasEdge(v1, v2)) {
+                i--;
+                continue;
+            }
+            addEdge(v1, v2);
+            addEdge(v2, v1);
+        }
+    }
+
+    // Create graph based on my distribution as described below:
+    // Two-third of the edges are between 20% of the vertices
+    // A third of the edges are between 80% of the vertices
+    public void createMyDistGraph(int E) {
+        int maxEdges = size * (size - 1) / 2;
+
+        if (E > maxEdges) {
+            System.out.println("Skewed Graph can't have this many edges.");
+            return;
         }
 
-        for (int i = 0; i < E/4; i++) {
-            int v1 = 0;
-            int v2 = 0;
-
+        int lightPart = (int)(size/20);
+        int twoThird = (int)(2*E/3);
+        
+        for (int i = 0; i < twoThird; i++) {
+            int v1 = Utility.getRandomNumber(0, lightPart - 1);
+            int v2 = Utility.getRandomNumber(0, lightPart - 1);
+            
+            if (v1 == v2 || hasEdge(v1, v2)) {
+                i--;
+                continue;
+            }
+            addEdge(v1, v2);
+            addEdge(v2, v1);
         }
+        
+        int oneThird = (int)(E/3);
+        for (int i = 0; i < oneThird; i++) {
+            int v1 = Utility.getRandomNumber(lightPart, size - 1);
+            int v2 = Utility.getRandomNumber(lightPart, size - 1);
 
+            if (v1 == v2 || hasEdge(v1, v2)) {
+                i--;
+                continue;
+            }
+            addEdge(v1, v2);
+            addEdge(v2, v1);
+        }
     }
 
     public static void main(String[] args) {
-        final int size = 1000;
-    
-        Graph graph = new Graph();
+        int size = 10000;
+        Graph graph = new Graph(size);
+        // graph.createCompleteGraph();
+        // graph.createCycleGraph();
+        int E = 200;
+        // graph.createUniformDistGraph(E);
+        graph.createSkewedDistGraph(E);
+        // graph.createMyDistGraph(E);
+        graph.printGraph();
     }
-    
 }
