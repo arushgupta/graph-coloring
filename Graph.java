@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -80,7 +79,7 @@ public class Graph {
     public void printGraph() {
         for (Vertex vertex : vertices) {
             System.out.print("Vertex " + vertex.id + ": ");
-            for (int neighborId : vertex.getNeighbors()) {
+            for (int neighborId : vertex.neighbors) {
                 System.out.print(neighborId + " ");
             }
             System.out.println("Degree: " + vertex.degree + ", Color: " + vertex.color);
@@ -92,7 +91,7 @@ public class Graph {
         int maxEdges = size * (size - 1) / 2;
 
         if (E > maxEdges) {
-            System.out.println("Evenly Dsitributed Graph can't have this many edges.");
+            System.out.println("Too many edges");
             return;
         }
 
@@ -105,7 +104,6 @@ public class Graph {
                 continue;
             }
             addEdge(v1, v2);
-            addEdge(v2, v1);
         }
     }
     
@@ -127,47 +125,29 @@ public class Graph {
                 continue;
             }
             addEdge(v1, v2);
-            addEdge(v2, v1);
         }
     }
 
     // Create graph based on my distribution as described below:
-    // Two-third of the edges are between 20% of the vertices
-    // A third of the edges are between 80% of the vertices
+    // One vertex can be any within the graph
+    // One vertex is skewed to be picked from the lower valued ones
     public void createMyDistGraph(int E) {
         int maxEdges = size * (size - 1) / 2;
 
         if (E > maxEdges) {
-            System.out.println("Skewed Graph can't have this many edges.");
+            System.out.println("Too many edges");
             return;
         }
 
-        int lightPart = (int)(size/20);
-        int twoThird = (int)(2*E/3);
-        
-        for (int i = 0; i < twoThird; i++) {
-            int v1 = Utility.getRandomNumber(0, lightPart - 1);
-            int v2 = Utility.getRandomNumber(0, lightPart - 1);
+        for(int i = 0; i < E; i++) {
+            int v1 = Utility.getRandomNumber(0, size - 1);
+            int v2 = Utility.getSkewedNumber(0, size - 1);
             
             if (v1 == v2 || hasEdge(v1, v2)) {
                 i--;
                 continue;
             }
             addEdge(v1, v2);
-            addEdge(v2, v1);
-        }
-        
-        int oneThird = (int)(E/3);
-        for (int i = 0; i < oneThird; i++) {
-            int v1 = Utility.getRandomNumber(lightPart, size - 1);
-            int v2 = Utility.getRandomNumber(lightPart, size - 1);
-
-            if (v1 == v2 || hasEdge(v1, v2)) {
-                i--;
-                continue;
-            }
-            addEdge(v1, v2);
-            addEdge(v2, v1);
         }
     }
 
@@ -191,18 +171,21 @@ public class Graph {
             if(degrees[i] == null) {
                 continue;
             }
-            Vertex temp = degrees[i];
-            ordering.add(temp);
-            degrees[i] = temp.next;
 
-            if (temp.next != null) {
-                temp.next.prev = null;
+            Vertex currVertex = degrees[i];
+            ordering.add(currVertex);
+            // Updates the degree of the vertex to reflect the degree on deletion
+            ordering.get(ordering.indexOf(currVertex)).degree = newDegrees[currVertex.id];
+            degrees[i] = currVertex.next;
+
+            if (currVertex.next != null) {
+                currVertex.next.prev = null;
             }
 
-            temp.next = null;
-            deleted[temp.id] = true;
+            currVertex.next = null;
+            deleted[currVertex.id] = true;
 
-            for(int neighborId: temp.neighbors) {
+            for(int neighborId: currVertex.neighbors) {
                 if(deleted[neighborId] == true) {
                     continue;
                 }
@@ -233,14 +216,14 @@ public class Graph {
         Collections.reverse(ordering);
     }
 
-    // Largest Last Degree Ordering
-    public void LLDO() {
+    // Largest Last Vertex Ordering
+    public void LLVO() {
         SLVO();
         Collections.reverse(ordering);
     }
 
     // Random Vertex Ordering
-    public void randomOrder() {
+    public void RNVO() {
         for(Vertex v: vertices) {
             ordering.add(v);
         }
@@ -289,7 +272,7 @@ public class Graph {
 
         for (int i = 0; i < vertex.neighbors.size(); i++) {
             int neighbor = vertex.neighbors.get(i);
-            colors[i] = neighbor;
+            colors[i] = vertices.get(neighbor).color;
         }
         
         int num = 0;
