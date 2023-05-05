@@ -1,6 +1,7 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 public class Graph {
     
@@ -8,7 +9,7 @@ public class Graph {
         int id;
         int degree;
         int color;
-        List<Integer> neighbors;
+        ArrayList<Integer> neighbors;
 
         Vertex prev;
         Vertex next;
@@ -24,14 +25,10 @@ public class Graph {
             neighbors.add(neighborId);
             degree++;
         }
-
-        public List<Integer> getNeighbors() {
-            return neighbors;
-        }
     }
     
-    List<Vertex> vertices;
-    List<Vertex> ordering;
+    ArrayList<Vertex> vertices;
+    ArrayList<Vertex> ordering;
     int size = 0;
     int maxColor = 0;
 
@@ -87,7 +84,7 @@ public class Graph {
     }
     
     // Create an Evenly Distributed Graph
-    public void createUniformDistGraph(int E) {
+    public void createUniformDistributionGraph(int E) {
         int maxEdges = size * (size - 1) / 2;
 
         if (E > maxEdges) {
@@ -108,17 +105,17 @@ public class Graph {
     }
     
     // Create a skewed graph
-    public void createSkewedDistGraph(int E) {
+    public void createSkewedDistributionGraph(int E) {
         int maxEdges = size * (size - 1) / 2;
 
         if (E > maxEdges) {
             System.out.println("Too many edges");
             return;
         }
-        // 
+        
         for (int i = 0; i < E; i++) {
-            int v1 = Utility.getSkewedNumber(0, size - 1);
-            int v2 = Utility.getSkewedNumber(0, size - 1);
+            int v1 = Utility.getSkewedNumber(size);
+            int v2 = Utility.getSkewedNumber(size);
 
             if (v1 == v2 || hasEdge(v1, v2)) {
                 i--;
@@ -128,10 +125,10 @@ public class Graph {
         }
     }
 
-    // Create graph based on my distribution as described below:
-    // One vertex can be any within the graph
-    // One vertex is skewed to be picked from the lower valued ones
-    public void createMyDistGraph(int E) {
+    // Create graph using custom distribution as described below:
+    // Unlike the skewed distribution, the custom distribution favors
+    // addition of vertices with a higher ID
+    public void createCustomDistributionGraph(int E) {
         int maxEdges = size * (size - 1) / 2;
 
         if (E > maxEdges) {
@@ -140,8 +137,8 @@ public class Graph {
         }
 
         for(int i = 0; i < E; i++) {
-            int v1 = Utility.getRandomNumber(0, size - 1);
-            int v2 = Utility.getSkewedNumber(0, size - 1);
+            int v1 = Utility.getCustomNumber(size);
+            int v2 = Utility.getCustomNumber(size);
             
             if (v1 == v2 || hasEdge(v1, v2)) {
                 i--;
@@ -258,6 +255,30 @@ public class Graph {
         Collections.reverse(ordering);
     }
 
+    // Depth-First Search Ordering
+    public void DFSO() {
+        boolean[] visited = new boolean[size];
+        
+        for (Vertex vertex : vertices) {
+            if (!visited[vertex.id]) {
+                dfs(vertex, visited);
+            }
+        }
+        Collections.reverse(ordering);
+    }
+
+    public void dfs(Vertex vertex, boolean[] visited) {
+        visited[vertex.id] = true;
+        for (int neighborId : vertex.neighbors) {
+            Vertex neighbor = vertices.get(neighborId);
+            if (!visited[neighborId]) {
+                dfs(neighbor, visited);
+            }
+        }
+        ordering.add(vertex);
+    }
+
+    // Color the graph based on the ordering
     public void colorGraph() {
         for (Vertex vertex : ordering) {
             vertex.color = colorVertex(vertex);
@@ -267,29 +288,44 @@ public class Graph {
         }
     }
 
+    // Color individual vertices
+    // Reduced vertex coloring to First Missing Positive Integer
+    // Link to the problem: https://leetcode.com/problems/first-missing-positive/
     public int colorVertex(Vertex vertex) {
         int[] colors = new int[size];
 
+        // Initialize list with current neighbor color
         for (int i = 0; i < vertex.neighbors.size(); i++) {
             int neighbor = vertex.neighbors.get(i);
             colors[i] = vertices.get(neighbor).color;
         }
         
-        int num = 0;
         for (int i = 0; i < colors.length; i++) {
-            num = colors[i];
-            while(0 < num && num <= colors.length && colors[num - 1] != num) {
+            int val = colors[i];
+            while(0 < val && val <= colors.length && colors[val - 1] != val) {
                 int temp = colors[i];
-                colors[i] = colors[num - 1];
-                colors[num - 1] = temp;
-                num = colors[i];
+                colors[i] = colors[val - 1];
+                colors[val - 1] = temp;
+                val = colors[i];
             }
         }
+
+        // Find the first gap in the sequence of colors
         for (int i = 0; i < colors.length; i++) {
             if (colors[i] != i + 1) {
                 return i + 1;
             }
         }
+
+        // No gap was found, so get next color
         return colors.length + 1;
+    }
+
+    public void printDegreeDistribution(String filename) throws IOException {
+        FileWriter fWriter = new FileWriter(filename);
+        for (Vertex vertex : vertices) {
+            fWriter.write(vertex.id + " " + vertex.degree + "\n");
+        }
+        fWriter.close();
     }
 }

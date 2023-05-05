@@ -8,10 +8,14 @@ public class Utility {
         return randomizer;
     }
 
-    // https://gamedev.stackexchange.com/questions/116832/random-number-in-a-range-biased-toward-the-low-end-of-the-range
-    public static int getSkewedNumber(int min, int max) {
-        double x = Math.pow(Math.random(), 2);
-        int num = (int)(min + x * (max - min + 1));
+    // Uses random() to generate a number favoring the lower values and then transforming to graph size
+    public static int getSkewedNumber(int size) {
+        int num = (int)(size * (1 - Math.sqrt(Math.random())));
+        return num;
+    }
+
+    public static int getCustomNumber(int size) {
+        int num = (int)(size * Math.sqrt(Math.random()));
         return num;
     }
 }
