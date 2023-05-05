@@ -31,6 +31,8 @@ public class Graph {
     ArrayList<Vertex> ordering;
     int size = 0;
     int maxColor = 0;
+    int maxDegree = 0;
+    int terminalCliqueSize = 0;
 
     public Graph(int size) {
         this.size = size;
@@ -327,5 +329,67 @@ public class Graph {
             fWriter.write(vertex.id + " " + vertex.degree + "\n");
         }
         fWriter.close();
+    }
+
+    public void printGraphToFile(String filename) throws IOException {
+        FileWriter fileWriter = new FileWriter(filename);
+        for (Vertex vertex : vertices) {
+            fileWriter.write(vertex.id + ": ");
+            for (int neighborId : vertex.neighbors) {
+                fileWriter.write(neighborId + " ");
+                // System.out.print(neighborId + " ");
+            }
+            fileWriter.write("\n");
+            // System.out.println("Degree: " + vertex.degree + ", Color: " + vertex.color);
+        }
+        fileWriter.close();
+    }
+
+    public void printOrderToFile(String filename) throws IOException {
+        FileWriter fileWriter = new FileWriter(filename);
+        fileWriter.write("Largest Degree: " + maxDegree + "\n"); // Only for SLVO
+        fileWriter.write("Terminal Clique: " + terminalCliqueSize + "\n"); // Only for SLVO
+        for (Vertex vertex : ordering) {
+            fileWriter.write("Vertex ID: " + vertex.id + " Degree: " + vertex.degree + "\n");
+        }
+        fileWriter.close();
+    }
+
+    public void printColorToFile(String filename) throws IOException {
+        FileWriter fileWriter = new FileWriter(filename);
+        fileWriter.write("Max Color: " + maxColor + "\n");
+        for (Vertex vertex : vertices) {
+            fileWriter.write("Vertex ID: " + vertex.id + " Degree: " + vertex.degree + " Color: " + vertex.color + "\n");
+        }
+        fileWriter.close();
+    }
+    
+    // Only for SLVO
+    public void getMaxDegree() {
+        for (Vertex vertex : ordering) {
+            if (maxDegree < vertex.degree) {
+                maxDegree = vertex.degree;
+            }
+        }
+    }
+
+    // Only for SLVO
+    public void getTerminalClique() {
+        int longest = 1;
+        int current = 1;
+        for (int i = 1; i < ordering.size(); i++) {
+            if (ordering.get(i).degree > ordering.get(i-1).degree && ordering.get(i).degree == ordering.get(i - 1).degree + 1) {
+                current++;
+            } else {
+                if (current > longest) {
+                    longest = current;
+                }
+                break;
+            }
+        }
+        if (current > longest) {
+            longest = current;
+        }
+        this.terminalCliqueSize = longest;       
     }
 }
