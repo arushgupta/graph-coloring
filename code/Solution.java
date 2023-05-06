@@ -23,8 +23,10 @@ public class Solution {
         // }
 
         // int[] edges = {500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000, 512000};
-        // int size = 10000;
-        // Graph graph = new Graph(size);
+        int size = 10000;
+        Graph graph = new Graph(size);
+        graph.createCustomDistributionGraph(size * 200);
+        // graph.createSkewedDistributionGraph(size * 200);
         
         // for (int E : edges) {
         //     System.out.println("Edges: " + E);
@@ -60,14 +62,14 @@ public class Solution {
         // graph.createSkewedDistributionGraph(size * 200);
         // graph.createCustomDistributionGraph(size * 200);
         // graph.printGraph();
-        // try {
-        //     graph.printDegreeDistribution("out.txt");
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
+        try {
+            graph.printDegreeDistribution("code/static/out.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         
         // try {
-        //     graph.printGraphToFile("graph.txt");
+        //     graph.printGraphToFile("code/static/graph.txt");
         // } catch (IOException e) {
         //     e.printStackTrace();
         // }
@@ -90,7 +92,7 @@ public class Solution {
         // graph.getMaxDegree();
         // graph.getTerminalClique();
         // try {
-        //     graph.printOrderToFile("order.txt");
+        //     graph.printOrderToFile("code/static/order.txt");
         // } catch (IOException e) {
         //     e.printStackTrace();
         // }
@@ -98,7 +100,7 @@ public class Solution {
         // graph.colorGraph();
         
         // try {
-        //     graph.printColorToFile("color.txt");
+        //     graph.printColorToFile("code/static/color.txt");
         // } catch (IOException e) {
         //     e.printStackTrace();
         // }
@@ -109,19 +111,19 @@ public class Solution {
         //     System.out.println("Vertex ID: " + graph.vertices.get(i).id + " Degree: " + graph.ordering.get(i).degree + " Color: " + graph.vertices.get(i).color);
         // }
 
-        Solution s = new Solution();
-        ArrayList<String> fileGraph = new ArrayList<>();
-        try {
-            fileGraph = s.readGraph();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Graph graph = s.createGraph(fileGraph);
-        graph.printGraph();
+        // Solution s = new Solution();
+        // ArrayList<String> fileGraph = new ArrayList<>();
+        // try {
+        //     fileGraph = s.readGraph();
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // }
+        // Graph graph = s.createGraph(fileGraph);
+        // graph.printGraph();
     }
 
     public ArrayList<String> readGraph() throws IOException {
-        BufferedReader in = new BufferedReader(new FileReader("graph.txt"));
+        BufferedReader in = new BufferedReader(new FileReader("code/static/graph.txt"));
 
         String firstLine = in.readLine();
         int size = Integer.parseInt(firstLine.trim());

@@ -69,7 +69,7 @@ public class Graph {
     // Create a cycle graph
     public void createCycleGraph() {
         for (int i = 0; i < size; i++) {
-            addEdge(i, (i+1) % size);
+            addEdge(i, (i + 1) % size);
         }
     }
 
