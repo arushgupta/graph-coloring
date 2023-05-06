@@ -1,0 +1,6 @@
+Max Color: 4
+Vertex ID: 0 Degree: 0 Color: 1
+Vertex ID: 1 Degree: 1 Color: 2
+Vertex ID: 2 Degree: 2 Color: 3
+Vertex ID: 3 Degree: 3 Color: 4
+Vertex ID: 4 Degree: 2 Color: 1
