@@ -172,9 +172,12 @@ public class Graph {
             }
 
             Vertex currVertex = degrees[i];
-            ordering.add(currVertex);
+            ordering.add(currVertex); // Constant Time
+            
             // Updates the degree of the vertex to reflect the degree on deletion
-            ordering.get(ordering.indexOf(currVertex)).degree = newDegrees[currVertex.id];
+            // ordering.get(ordering.indexOf(currVertex)).degree = newDegrees[currVertex.id];
+            ordering.get(ordering.size() - 1).degree = newDegrees[currVertex.id]; // Constant time
+            
             degrees[i] = currVertex.next;
 
             if (currVertex.next != null) {
