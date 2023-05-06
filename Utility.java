@@ -1,4 +1,5 @@
 import java.lang.Math;
+import java.util.Random;
 
 public class Utility {
 
@@ -18,4 +19,11 @@ public class Utility {
         int num = (int)(size * Math.sqrt(Math.random()));
         return num;
     }
+
+    public static int getShuffledIndex(int i) {
+        Random random = new Random();
+        int num = random.nextInt(i + 1);
+        return num;
+    }
+
 }

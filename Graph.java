@@ -1,15 +1,12 @@
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class Graph {
-    
     class Vertex {
         int id;
         int degree;
         int color;
-        ArrayList<Integer> neighbors;
+        boolean[] neighbors;
 
         Vertex prev;
         Vertex next;
@@ -18,17 +15,19 @@ public class Graph {
             this.id = id;
             this.degree = 0;
             this.color = 0;
-            this.neighbors = new ArrayList<Integer>(size);
+            this.neighbors = new boolean[size];
         }
 
         public void addNeighbor(int neighborId) {
-            neighbors.add(neighborId);
-            degree++;
+            this.neighbors[neighborId] = true;
+            this.degree++;
         }
     }
     
-    ArrayList<Vertex> vertices;
-    ArrayList<Vertex> ordering;
+    Vertex[] vertices;
+    Vertex[] ordering;
+    int orderingCap = 0;
+    
     int size = 0;
     int maxColor = 0;
     int maxDegree = 0;
@@ -36,16 +35,16 @@ public class Graph {
 
     public Graph(int size) {
         this.size = size;
-        vertices = new ArrayList<Vertex>(size);
+        vertices = new Vertex[size];
         for (int i = 0; i < size; i++) {
-            vertices.add(i, new Vertex(i, size));
+            vertices[i] = new Vertex(i, size);
         }
-        ordering = new ArrayList<Vertex>(size);
+        ordering = new Vertex[size];
     }
 
     public void addEdge(int src, int dest) {
-        Vertex srcVertex = vertices.get(src);
-        Vertex destVertex = vertices.get(dest);
+        Vertex srcVertex = vertices[src];
+        Vertex destVertex = vertices[dest];
 
         srcVertex.addNeighbor(dest);
         destVertex.addNeighbor(src);
@@ -53,9 +52,8 @@ public class Graph {
 
     // Checks whether two vertices share an edge
     // Runs in O(1) - Constant
-    // https://www.baeldung.com/java-collections-complexity
     public boolean hasEdge(int src, int dest) {
-        return vertices.get(src).neighbors.contains(dest) && vertices.get(dest).neighbors.contains(src);
+        return vertices[src].neighbors[dest] && vertices[dest].neighbors[src];
     }
 
     // Create a complete graph
@@ -78,8 +76,12 @@ public class Graph {
     public void printGraph() {
         for (Vertex vertex : vertices) {
             System.out.print("Vertex " + vertex.id + ": ");
-            for (int neighborId : vertex.neighbors) {
-                System.out.print(neighborId + " ");
+
+            boolean[] neighbors = vertex.neighbors;
+            for (int neighborId = 0; neighborId < neighbors.length; neighborId++) {
+                if (neighbors[neighborId]) {
+                    System.out.print(neighborId + " ");
+                }
             }
             System.out.println("Degree: " + vertex.degree + ", Color: " + vertex.color);
         }
@@ -150,14 +152,38 @@ public class Graph {
         }
     }
 
+    public void reverseOrdering() {
+        int n = ordering.length;
+        for(int i = 0; i < n / 2; i++) {
+            swapOrderingElem(i, n - i - 1);
+        }
+    }
+
+    // Implementing the Fisher-Yates Shuffle
+    // Source: https://stackoverflow.com/questions/1519736/random-shuffling-of-an-array
+    public void shuffleOrdering() {
+        int n = ordering.length;
+        for(int i = n - 1; i > 0; i--) {
+            int j = Utility.getShuffledIndex(i);
+            swapOrderingElem(i, j);
+        }
+    }
+
+    // Swapping functionality abstracted to separate function to prevent code repition
+    public void swapOrderingElem(int i, int j) {
+        Vertex temp = ordering[i];
+        ordering[i] = ordering[j];
+        ordering[j] = temp;
+    }
+
     // Smallest Last Vertex Ordering
     public void SLVO() {
         Vertex[] degrees = new Vertex[size];
         int[] newDegrees = new int[size];
         boolean[] deleted = new boolean[size];
 
-        for (int i = 0; i < vertices.size(); i++) {
-            Vertex vertex = vertices.get(i);
+        for (int i = 0; i < vertices.length; i++) {
+            Vertex vertex = vertices[i];
             if (degrees[vertex.degree] != null) {
                 degrees[vertex.degree].prev = vertex;
                 vertex.next = degrees[vertex.degree];
@@ -172,11 +198,11 @@ public class Graph {
             }
 
             Vertex currVertex = degrees[i];
-            ordering.add(currVertex); // Constant Time
+            ordering[orderingCap] = currVertex;
             
             // Updates the degree of the vertex to reflect the degree on deletion
-            // ordering.get(ordering.indexOf(currVertex)).degree = newDegrees[currVertex.id];
-            ordering.get(ordering.size() - 1).degree = newDegrees[currVertex.id]; // Constant time
+            ordering[orderingCap].degree = newDegrees[currVertex.id];
+            orderingCap++;
             
             degrees[i] = currVertex.next;
 
@@ -187,27 +213,31 @@ public class Graph {
             currVertex.next = null;
             deleted[currVertex.id] = true;
 
-            for(int neighborId: currVertex.neighbors) {
-                if(deleted[neighborId] == true) {
-                    continue;
+            boolean[] neighbors = currVertex.neighbors;
+            for (int neighborId = 0; neighborId < neighbors.length; neighborId++) {
+                // Check if vertex with neighborId is a neighbor
+                if (neighbors[neighborId]) {
+                    if(deleted[neighborId] == true) {
+                        continue;
+                    }
+                    Vertex neighbor = vertices[neighborId];
+                    if(neighbor.next != null) {
+                        neighbor.next.prev = neighbor.prev;
+                    }
+                    if (neighbor.prev != null) {
+                        neighbor.prev.next = neighbor.next;
+                    } else {
+                        degrees[newDegrees[neighborId]] = neighbor.next;
+                    }
+                    newDegrees[neighborId] -= 1;
+                    neighbor.prev = null;
+                    neighbor.next = degrees[newDegrees[neighborId]];
+    
+                    if (degrees[newDegrees[neighborId]] != null) {
+                        degrees[newDegrees[neighborId]].prev = neighbor;
+                    }
+                    degrees[newDegrees[neighborId]] = neighbor;
                 }
-                Vertex neighbor = vertices.get(neighborId);
-                if(neighbor.next != null) {
-                    neighbor.next.prev = neighbor.prev;
-                }
-                if (neighbor.prev != null) {
-                    neighbor.prev.next = neighbor.next;
-                } else {
-                    degrees[newDegrees[neighborId]] = neighbor.next;
-                }
-                newDegrees[neighborId] -= 1;
-                neighbor.prev = null;
-                neighbor.next = degrees[newDegrees[neighborId]];
-
-                if (degrees[newDegrees[neighborId]] != null) {
-                    degrees[newDegrees[neighborId]].prev = neighbor;
-                }
-                degrees[newDegrees[neighborId]] = neighbor;
             }
             if (i == 0) {
                 i--;
@@ -215,29 +245,30 @@ public class Graph {
             }
             i -= 2;
         }
-        Collections.reverse(ordering);
+        reverseOrdering();
     }
 
     // Largest Last Vertex Ordering
     public void LLVO() {
         SLVO();
-        Collections.reverse(ordering);
+        reverseOrdering();
     }
 
     // Random Vertex Ordering
     public void RNVO() {
         for(Vertex v: vertices) {
-            ordering.add(v);
+            ordering[orderingCap] = v;
+            orderingCap++;
         }
-        Collections.shuffle(ordering);
+        shuffleOrdering();
     }
 
     // Smallest Original Degree Ordering
     public void SODO() {
         Vertex[] degrees = new Vertex[size];
 
-        for (int i = 0; i < vertices.size(); i++) {
-            Vertex vertex = vertices.get(i);
+        for (int i = 0; i < vertices.length; i++) {
+            Vertex vertex = vertices[i];
             if (degrees[vertex.degree] != null) {
                 degrees[vertex.degree].prev = vertex;
                 vertex.next = degrees[vertex.degree];
@@ -248,7 +279,8 @@ public class Graph {
         for(int i = 0; i < degrees.length; i++) {
             Vertex curr = degrees[i];
             while (curr != null) {
-                ordering.add(curr);
+                ordering[orderingCap] = curr;
+                orderingCap++;
                 curr = curr.next;
             }
         }
@@ -257,7 +289,7 @@ public class Graph {
     // Largest Original Degree Ordering
     public void LODO() {
         SODO();
-        Collections.reverse(ordering);
+        reverseOrdering();
     }
 
     // Depth-First Search Ordering
@@ -269,18 +301,22 @@ public class Graph {
                 dfs(vertex, visited);
             }
         }
-        Collections.reverse(ordering);
+        reverseOrdering();
     }
 
     public void dfs(Vertex vertex, boolean[] visited) {
         visited[vertex.id] = true;
-        for (int neighborId : vertex.neighbors) {
-            Vertex neighbor = vertices.get(neighborId);
-            if (!visited[neighborId]) {
-                dfs(neighbor, visited);
+        boolean[] neighbors = vertex.neighbors;
+        for (int neighborId = 0; neighborId < neighbors.length; neighborId++) {
+            if (neighbors[neighborId]) {
+                Vertex neighbor = vertices[neighborId];
+                if (!visited[neighborId]) {
+                    dfs(neighbor, visited);
+                }
             }
         }
-        ordering.add(vertex);
+        ordering[orderingCap] = vertex;
+        orderingCap++;
     }
 
     // Color the graph based on the ordering
@@ -300,9 +336,11 @@ public class Graph {
         int[] colors = new int[size];
 
         // Initialize list with current neighbor color
-        for (int i = 0; i < vertex.neighbors.size(); i++) {
-            int neighbor = vertex.neighbors.get(i);
-            colors[i] = vertices.get(neighbor).color;
+        boolean[] neighbors = vertex.neighbors;
+        for (int i = 0; i < neighbors.length; i++) {
+            if (neighbors[i]) {
+                colors[i] = vertices[i].color;
+            }
         }
         
         for (int i = 0; i < colors.length; i++) {
@@ -336,14 +374,16 @@ public class Graph {
 
     public void printGraphToFile(String filename) throws IOException {
         FileWriter fileWriter = new FileWriter(filename);
+        fileWriter.write(size + "\n");
         for (Vertex vertex : vertices) {
             fileWriter.write(vertex.id + ": ");
-            for (int neighborId : vertex.neighbors) {
-                fileWriter.write(neighborId + " ");
-                // System.out.print(neighborId + " ");
+            boolean[] neighbors = vertex.neighbors;
+            for (int neighborId = 0; neighborId < neighbors.length; neighborId++) {
+                if (neighbors[neighborId]) {
+                    fileWriter.write(neighborId + " ");
+                }
             }
             fileWriter.write("\n");
-            // System.out.println("Degree: " + vertex.degree + ", Color: " + vertex.color);
         }
         fileWriter.close();
     }
@@ -380,8 +420,8 @@ public class Graph {
     public void getTerminalClique() {
         int longest = 1;
         int current = 1;
-        for (int i = 1; i < ordering.size(); i++) {
-            if (ordering.get(i).degree > ordering.get(i-1).degree && ordering.get(i).degree == ordering.get(i - 1).degree + 1) {
+        for (int i = 1; i < ordering.length; i++) {
+            if (ordering[i].degree > ordering[i - 1].degree && ordering[i].degree == ordering[i - 1].degree + 1) {
                 current++;
             } else {
                 if (current > longest) {
