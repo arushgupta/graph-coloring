@@ -264,7 +264,7 @@ public class Graph {
         shuffleOrdering();
     }
 
-    // Smallest Original Degree Ordering
+    // Smallest Original Degree Last Ordering
     public void SODO() {
         Vertex[] degrees = new Vertex[size];
 
@@ -287,7 +287,7 @@ public class Graph {
         }
     }
 
-    // Largest Original Degree Ordering
+    // Largest Original Degree Last Ordering
     public void LODO() {
         SODO();
         reverseOrdering();
@@ -302,7 +302,7 @@ public class Graph {
                 dfs(vertex, visited);
             }
         }
-        reverseOrdering();
+        shuffleOrdering();
     }
 
     public void dfs(Vertex vertex, boolean[] visited) {
@@ -435,5 +435,21 @@ public class Graph {
             longest = current;
         }
         this.terminalCliqueSize = longest;       
+    }
+
+    public void printOrderColor(String filename) throws IOException {
+        FileWriter fileWriter = new FileWriter(filename);
+        for (Vertex vertex : ordering) {
+            fileWriter.write(vertex.degree + " " + vertex.color + "\n");
+        }
+        fileWriter.close();
+    }
+
+    public void printOrderDegree(String filename) throws IOException {
+        FileWriter fileWriter = new FileWriter(filename);
+        for (int i = 0; i < ordering.length; i++) {
+            fileWriter.write(i + " " + ordering[i].degree + "\n");
+        }
+        fileWriter.close();
     }
 }
